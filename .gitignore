@@ -13,3 +13,7 @@ out/
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# things i want to hide
+INSTRUCTIONS.md
+TIMELINE.md
