@@ -1,0 +1,15 @@
+# Compiled Object files
+*.o
+*.obj
+*.exe
+*.out
+*.app
+
+# Build directories
+build/
+bin/
+out/
+
+# OS generated files
+.DS_Store
+Thumbs.db
