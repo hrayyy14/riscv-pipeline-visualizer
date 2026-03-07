@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_executable(Visualizer
     src/main.cpp
     src/parser.cpp
+    src/simulator.cpp
 )
 
 # Tell the compiler where to find our header files
