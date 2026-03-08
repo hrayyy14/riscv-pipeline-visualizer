@@ -21,12 +21,13 @@ The simulator re-runs instantly on every keystroke and redraws the chart with ex
 
 - Simple but strict RV32I parser (add, sub, lw, sw, beq, etc.)
 - Full 5-stage simulation engine with hazard detection and stall/bubble insertion
+- Clean, dark-mode ImGui split-screen layout (left editor + right canvas)
+- The simulator is wired directly to the text buffer, re-parsing and re-simulating the CPU at 60 FPS as you type without needing a "Run" button
+- Dynamic Gantt-chart generated using `ImDrawList` graphics
 
 **Planned Features**
 
 - Data forwarding logic + visual curved arrows
-- Real-time connection between live editor and simulator
-- Clean ImGui-based split-screen UI (left editor + right canvas)
 - WebAssembly build + GitHub Pages deployment
 
 ## Techniques & Tools
@@ -36,3 +37,20 @@ The simulator re-runs instantly on every keystroke and redraws the chart with ex
 - **Visualization**: ImGui::GetWindowDrawList() for Gantt chart + Bezier arrows
 - **Simulation**: Cycle-accurate 5-stage pipeline with hazard detection and forwarding logic
 - **Target**: RV32I subset (easy to extend)
+
+## How to Build & Run (macOS/Linux)
+
+Ensure you have a C++17 compiler and CMake (3.10+) installed.
+
+```bash
+# Clone the repository and its submodules (ImGui & GLFW)
+git clone --recursive [https://github.com/hrayyy14/riscv-pipeline-visualizer.git](https://github.com/hrayyy14/riscv-pipeline-visualizer.git)
+cd riscv-pipeline-visualizer
+
+# Generate build files and compile
+cmake -B build
+cmake --build build
+
+# Run the visualizer
+./build/Visualizer
+```
