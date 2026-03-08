@@ -5,18 +5,30 @@
 #include <iostream>
 #include <unordered_map>
 
+// try and catch in the parser functions so the vis does not crash
+// REVIEW later
+
 int parseRegister (std::string reg) {
     reg.erase(std::remove(reg.begin(), reg.end(), ','), reg.end());
     reg.erase(std::remove(reg.begin(), reg.end(), ' '), reg.end());
     if (!reg.empty() && reg[0] == 'x') {
-        return std::stoi(reg.substr(1));
+        try {
+            return std::stoi(reg.substr(1));
+        } catch (...) {
+            return -1; 
+        }
     }
-    return -1; // invalid
+    return -1;
 }
 
 int parseImmediate (std::string imm) {
     imm.erase(std::remove(imm.begin(), imm.end(), ','), imm.end());
-    return std::stoi(imm);
+    if (imm.empty()) return 0;
+    try {
+        return std::stoi(imm);
+    } catch (...) {
+        return 0; 
+    }
 }
 
 static const std::unordered_map<std::string, Opcode> name_map = {

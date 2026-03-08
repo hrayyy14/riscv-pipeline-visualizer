@@ -1,51 +1,73 @@
 #include <iostream>
-#include <iomanip>
-#include "../include/parser.h"
-#include "../include/simulator.h"
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+#include "../include/ui.h"
+
+#define GL_SILENCE_DEPRECATION
+#include <GLFW/glfw3.h> // openGL headers
+
+static void glfw_error_callback(int error, const char* description) {
+    std::cerr << "GLFW Error " << error << ": " << description << "\n";
+}
 
 int main() {
-    std::string test_code = 
-        "addi x1, x0, 100\n"
-        "add x2, x1, x3\n"
-        "sw x2, x4, 4\n";
+    // initialize GLFW 
+    glfwSetErrorCallback(glfw_error_callback);
+    if (!glfwInit()) return 1;
 
-    std::cout << "=== RISC-V Pipeline Visualizer ===\n\n";
-    std::cout << "--- 1. Parsing Assembly ---\n";
-    
-    std::vector<Instruction> instructions = parseLine(test_code);
-    for (const auto& inst : instructions) {
-        std::cout << "ID " << inst.id << ": " << inst.text << "\n";
+    // MacOS requiremets
+    const char* glsl_version = "#version 150";
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+
+    // create window
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "RISC-V Pipeline Visualizer", nullptr, nullptr);
+    if (window == nullptr) return 1;
+    glfwMakeContextCurrent(window);
+    glfwSwapInterval(1); // monitor framrate
+
+    // initialize
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    ImGui::StyleColorsDark(); // darkmode
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init(glsl_version);
+
+    // render loop
+    while (!glfwWindowShouldClose(window)) {
+        glfwPollEvents();
+        // start frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        // UI goes here
+        UI::Render();
+
+        // rendering
+        ImGui::Render();
+        int display_w, display_h;
+        glfwGetFramebufferSize(window, &display_w, &display_h);
+        glViewport(0, 0, display_w, display_h);
+        
+        // clear the screen to a dark grey background
+        glClearColor(0.15f, 0.15f, 0.15f, 1.00f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        
+        // draw the ImGui data to the screen
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        glfwSwapBuffers(window);
     }
-    
-    std::cout << "\n--- 2. Running Simulation ---\n\n";
-    std::vector<State> history = simulatePipeline(instructions);
-    // print
-    for (const auto& state : history) {
-        std::cout << "Cycle " << state.cycle_number;
-        if (state.is_stalled) {
-            std::cout << "  [*** STALL DETECTED ***]";
-        }
-        std::cout << "\n";
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
-        // lambda function
-        auto printStage = [&](const std::string& name, int stage_index) {
-            std::cout << "  " << name << " : ";
-            int inst_id = state.instructions[stage_index];
-            if (inst_id == -1) {
-                std::cout << "--- (Bubble)\n";
-            } else {
-                std::cout << "[" << inst_id << "] " << instructions[inst_id].text << "\n";
-            }
-        };
-
-        printStage("FETCH ", FETCH);
-        printStage("DECODE", DECODE);
-        printStage("EXEC  ", EXECUTE);
-        printStage("MEM   ", MEMORY_ACCESS);
-        printStage("WB    ", WRITE_BACK);
-        std::cout << "-----------------------------------\n";
-    }
-
-    std::cout << "Simulation complete in " << history.size() << " cycles.\n";
+    glfwDestroyWindow(window);
+    glfwTerminate();
     return 0;
 }
