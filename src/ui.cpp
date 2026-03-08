@@ -74,7 +74,7 @@ namespace UI {
         ImGui::SameLine();
 
         // right panel 
-        // Added HorizontalScrollbar flag so we can scroll if the timeline gets really long
+        // horizontalScrollbar flag so we can scroll if the timeline gets really long
         ImGui::BeginChild("CanvasPanel", ImVec2(0, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
         ImGui::Text("Pipeline Execution Canvas");
         ImGui::Separator();
@@ -85,7 +85,6 @@ namespace UI {
             ImDrawList* draw_list = ImGui::GetWindowDrawList();
             ImVec2 cursor = ImGui::GetCursorScreenPos();
             
-            // Grid sizing parameters
             float cell_w = 40.0f;
             float cell_h = 30.0f;
             float label_w = 160.0f;
@@ -97,14 +96,14 @@ namespace UI {
             // To allow scrolling, we need to tell ImGui how big our custom drawing actually is
             ImGui::Dummy(ImVec2(label_w + (total_cycles * cell_w), header_h + (total_insts * cell_h)));
 
-            // 1. DRAW HEADER (Cycle Numbers)
+            // DRAW HEADER (Cycle Numbers)
             for (int c = 1; c <= total_cycles; ++c) {
                 float x = cursor.x + label_w + ((c - 1) * cell_w);
                 std::string cycle_str = std::to_string(c);
                 draw_list->AddText(ImVec2(x + (cell_w/2) - 5, cursor.y + 5), IM_COL32(200, 200, 200, 255), cycle_str.c_str());
             }
 
-            // 2. DRAW Y-AXIS (Instruction Labels) & GRID LINES
+            // DRAW Y-AXIS (Instruction Labels) & GRID LINES
             for (int r = 0; r < total_insts; ++r) {
                 float y = cursor.y + header_h + (r * cell_h);
                 
@@ -124,7 +123,7 @@ namespace UI {
                 draw_list->AddLine(ImVec2(x, cursor.y + header_h), ImVec2(x, cursor.y + header_h + (total_insts * cell_h)), IM_COL32(60, 60, 60, 255));
             }
 
-            // 3. DRAW THE BLOCKS
+            // DRAW THE BLOCKS
             // We loop through our history array from simulator.cpp
             for (size_t c_idx = 0; c_idx < cached_history.size(); ++c_idx) {
                 const State& state = cached_history[c_idx];
