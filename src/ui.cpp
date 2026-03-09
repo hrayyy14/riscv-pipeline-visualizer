@@ -11,7 +11,7 @@ namespace UI {
     
     // cached simulation data
     static std::vector<Instruction> cached_instructions;
-    static std::vector<State> cached_history;
+    static SimulationResult cached_result;
     static bool needs_update = true; // set to true initially so it parses on startup
 
     // colors
@@ -42,7 +42,7 @@ namespace UI {
     void Render() {
         if (needs_update) {
             cached_instructions = parseLine(code_buffer);
-            cached_history = simulatePipeline(cached_instructions);
+            cached_result = simulatePipeline(cached_instructions, enable_forwarding);
             needs_update = false;
         }
         // main window
@@ -57,7 +57,9 @@ namespace UI {
         ImGui::BeginChild("TopBar", ImVec2(0, 40), true);
         ImGui::Text("Hardware Toggles:");
         ImGui::SameLine();
-        ImGui::Checkbox("Enable Data Forwarding (Bypass Paths)", &enable_forwarding);
+        if (ImGui::Checkbox("Enable Data Forwarding (Bypass Paths)", &enable_forwarding)) {
+            needs_update = true;
+        }
         ImGui::EndChild();
 
         // left panel
@@ -79,7 +81,7 @@ namespace UI {
         ImGui::Text("Pipeline Execution Canvas");
         ImGui::Separator();
 
-        if (cached_instructions.empty() || cached_history.empty()) {
+        if (cached_instructions.empty() || cached_result.history.empty()) {
             ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "Type valid assembly to see the Gantt chart...");
         } else {
             ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -90,7 +92,7 @@ namespace UI {
             float label_w = 160.0f;
             float header_h = 30.0f;
 
-            int total_cycles = cached_history.back().cycle_number;
+            int total_cycles = cached_result.history.back().cycle_number;
             int total_insts = cached_instructions.size();
 
             // To allow scrolling, we need to tell ImGui how big our custom drawing actually is
@@ -125,8 +127,8 @@ namespace UI {
 
             // DRAW THE BLOCKS
             // We loop through our history array from simulator.cpp
-            for (size_t c_idx = 0; c_idx < cached_history.size(); ++c_idx) {
-                const State& state = cached_history[c_idx];
+            for (size_t c_idx = 0; c_idx < cached_result.history.size(); ++c_idx) {
+                const State& state = cached_result.history[c_idx];
                 int cycle_col = state.cycle_number - 1;
 
                 // Loop through the 5 stages inside this cycle
@@ -140,7 +142,7 @@ namespace UI {
                         
                         // Detect a STALL: If the instruction was in this EXACT SAME STAGE during the previous cycle
                         bool is_stall = false;
-                        if (c_idx > 0 && cached_history[c_idx - 1].instructions[stage] == inst_id) {
+                        if (c_idx > 0 && cached_result.history[c_idx - 1].instructions[stage] == inst_id) {
                             is_stall = true;
                         }
 
@@ -153,6 +155,36 @@ namespace UI {
                         draw_list->AddText(ImVec2(rect_x + 8, rect_y + 6), IM_COL32(0, 0, 0, 255), stage_name);
                     }
                 }
+            }
+            // DRAW THE ARROWS
+            for (const auto& event : cached_result.forwarding_events) {
+                int cycle_col = event.cycle_number - 1;
+                
+                // source is the older instruction
+                float src_x = cursor.x + label_w + (cycle_col * cell_w);
+                float src_y = cursor.y + header_h + (event.source_inst_id * cell_h);
+                
+                // dest is the newer instruction
+                float dst_x = src_x;
+                float dst_y = cursor.y + header_h + (event.dest_inst_id * cell_h);
+                
+                // bottom-center of the source block
+                ImVec2 p1 = ImVec2(src_x + cell_w / 2.0f, src_y + cell_h); 
+                // top-center of the destination block
+                ImVec2 p2 = ImVec2(dst_x + cell_w / 2.0f, dst_y); 
+                
+                // control points bulge out to the left
+                ImVec2 cp1 = ImVec2(p1.x - 25.0f, p1.y + 15.0f);
+                ImVec2 cp2 = ImVec2(p2.x - 25.0f, p2.y - 15.0f);
+                // yellow curve
+                draw_list->AddBezierCubic(p1, cp1, cp2, p2, IM_COL32(255, 235, 59, 255), 2.5f);
+                // draw a small arrowhead where it lands
+                draw_list->AddTriangleFilled(
+                    ImVec2(p2.x, p2.y), 
+                    ImVec2(p2.x - 5.0f, p2.y - 6.0f), 
+                    ImVec2(p2.x + 5.0f, p2.y - 6.0f), 
+                    IM_COL32(255, 235, 59, 255)
+                );
             }
         }
         ImGui::EndChild();

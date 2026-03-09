@@ -92,3 +92,16 @@ struct State {
     bool is_stalled = false;
 };
 
+// data hazards
+struct ForwardingEvent {
+    int cycle_number; // cycle the forwarding ocurred
+    int source_inst_id;// instuction passing the data 
+    int dest_inst_id;// instuction receiving the data 
+    int source_stage;// MEMORY_ACCESS or WRITE_BACK
+};
+
+struct SimulationResult {
+    std::vector<State> history;
+    std::vector<ForwardingEvent> forwarding_events;
+};
+
