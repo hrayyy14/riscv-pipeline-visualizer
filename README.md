@@ -2,6 +2,8 @@
 
 **Interactive real-time tool that visualizes a 5-stage RISC-V pipeline (IF-ID-EX-MEM-WB) with assembly editor and "what-if" toggles.**
 
+![RISC-V Pipeline Visualizer UI](images/riscv_pipeline.png)
+
 ## The Problem
 
 Understanding pipeline hazards, stalls, and data forwarding in a 5-stage processor is hard from static diagrams or textbooks. Students and engineers need an interactive way to type real RISC-V assembly and instantly see how forwarding, stalls, and clock cycles behave.

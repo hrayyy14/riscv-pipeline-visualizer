@@ -14,5 +14,5 @@ out/
 .DS_Store
 Thumbs.db
 
-# things i want to hide
+# things I want to hide
 TIMELINE.md
